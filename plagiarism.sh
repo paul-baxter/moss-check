@@ -19,6 +19,7 @@ fi
 
 #general options
 W_DIRECTORY="$1"
+SUBSTRING="CMP2090M Assessment Item 1 Supporting Documentation Upload_"
 
 #the following are MOSS options
 LANGUAGE="cc"              #define c++ as language to analyse
@@ -28,13 +29,22 @@ MAX_MATCHES="10000"           #max times a piece of code can appear before being
 [ -d $W_DIRECTORY/cc_source_files ] || mkdir $W_DIRECTORY/cc_source_files
 cd "$W_DIRECTORY"
 
-echo "...iterating through zip files, unpacking and handling:"
+echo "...renaming zip files to something more sensible:"
 echo ""
 COUNT=0
+
+for file in *.zip; do
+	[ -f "$file" ] || echo "No matching .zip files"
+	#0a: strip out useless filename info
+	mv "$file" "${file/$SUBSTRING/}" 2>/dev/null #suppress warnings
+done
+echo ""
+echo "...iterating through zip files, unpacking and handling:"
+echo ""
 for file in *.zip; do
 	[ -f "$file" ] || echo "No matching .zip files" #&& exit
 	echo "	>>	$file"
-	#0: strip extension
+	#0b: strip extension
 	file=${file%.*}
 	#1: unzip to temp dir
 	unzip -qq "$file" -d "$file.tmp"
