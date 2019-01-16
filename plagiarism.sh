@@ -1,3 +1,4 @@
+#/bin/bash
 #Assumes:
 # - 'unzip' installed
 sudo echo ""
@@ -27,7 +28,9 @@ BASE_FILES="ReadWriteFunctions.cpp"  #define source file(s) of provided code
 MAX_MATCHES="10000"           #max times a piece of code can appear before being ignored
 
 [ -d $W_DIRECTORY/cc_source_files ] || mkdir $W_DIRECTORY/cc_source_files
+cp to_UTF8.sh "$W_DIRECTORY"
 cd "$W_DIRECTORY"
+sudo chmod a+rwx to_UTF8.sh
 
 echo "...renaming zip files to something more sensible:"
 echo ""
@@ -36,7 +39,7 @@ COUNT=0
 for file in *.zip; do
 	[ -f "$file" ] || echo "No matching .zip files"
 	#0a: strip out useless filename info
-	mv "$file" "${file/$SUBSTRING/}" 2>/dev/null #suppress warnings
+	mv "$file" "${file/$SUBSTRING/}" 2>/dev/null #suppress errors
 done
 echo ""
 echo "...iterating through zip files, unpacking and handling:"
@@ -60,9 +63,17 @@ for file in *.zip; do
 	touch $OUTFILE
 	OUTFILE=${OUTFILE//[^a-zA-Z0-9]/_}
 	OUTFILE="$OUTFILE".cc
-	cat *.h >> "$OUTFILE"
+	cat *.h >> "$OUTFILE" 2>/dev/null #suppress errors
+	cat *.hpp >> "$OUTFILE" 2>/dev/null #suppress errors
 	cat *.cpp >> "$OUTFILE"
-	#4: move new source file to code dir, then clean up
+	#4: modify the files if necessary
+	tmpfile=$(mktemp)
+	tr -cd '\11\12\15\40-\176' < "$OUTFILE" > ${tmpfile}	#remove non-printable characters
+	cat ${tmpfile} > "$OUTFILE"
+	rm -f ${tmpfile}
+	dos2unix -f "$OUTFILE" 2>/dev/null #deal with windows line endings...
+	"$W_DIRECTORY"/to_UTF8.sh $OUTFILE	 2>/dev/null #convert to utf8 if utf16
+	#5: move new source file to code dir, then clean up
 	mv $OUTFILE "$W_DIRECTORY"/cc_source_files/$OUTFILE
 	cd ..
 	rm -r "$file.tmp"
@@ -74,11 +85,10 @@ echo "...processed zip files: $COUNT"
 echo ""
 cd ..
 
-#Possibly need to add conversion to UTF-8 here...
-#    using http://theory.stanford.edu/~aiken/moss/to_UTF8.sh
+rm "$W_DIRECTORY"/to_UTF8.sh
 
 #send data to MOSS
-./moss.sh -l "$LANGUAGE" -b "$BASE_FILES" -m "$MAX_MATCHES" $W_DIRECTORY/cc_source_files/*.cc
+./moss.sh -l "$LANGUAGE" -b "$BASE_FILES" -m "$MAX_MATCHES" -c "OOP 1819" $W_DIRECTORY/cc_source_files/*.cc
 
 #do something with the returned data...?
 
