@@ -15,5 +15,8 @@ Outline process:
 * run check on all files through moss (http://theory.stanford.edu/~aiken/moss/)
 * go to the moss report with provided URL
 
-Extensions:
-* Automatically generate a report (possibly with https://github.com/hjalti/mossum)?
+Visualisation:
+* Using https://github.com/hjalti/mossum (needs to be installed)
+* use >> mossum -p 85 -t ".*/.*/.*/.*/.*/.*/(.*)" $results_url
+* -p 85 indicates only plot lines with >85% match
+* -t indicates mask (needs to be modified for source data file path)
